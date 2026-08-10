@@ -1,10 +1,15 @@
 import { defineConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox-viem";
+import toolboxPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import * as dotenv from "dotenv";
 
 dotenv.config(); // ← Biar bisa baca file .env
 
+const privateKey = process.env.PRIVATE_KEY_TESNET || 
+    (process.env.PRIVATE_KEY_TESNET_SEGMEN_PERTAMA && process.env.PRIVATE_KEY_TESNET_SEGMEN_KEDUA ? 
+    `${process.env.PRIVATE_KEY_TESNET_SEGMEN_PERTAMA}${process.env.PRIVATE_KEY_TESNET_SEGMEN_KEDUA}` : "");
+
 export default defineConfig({
+    plugins: [toolboxPlugin],
     solidity: {
         version: "0.8.27",
         settings: {
@@ -24,7 +29,7 @@ export default defineConfig({
         sepolia: {
             type: "http",
             url: process.env.SEPOLIA_URL || "https://rpc.sepolia.org",
-            accounts: process.env.PRIVATE_KEY_TESNET ? [process.env.PRIVATE_KEY_TESNET] : [],
+            accounts: privateKey ? [privateKey] : [],
         },
     },
 

@@ -15,7 +15,7 @@ export interface AaveAdapter$Type {
   readonly deployedLinkReferences: {};
   readonly immutableReferences: {};
   readonly inputSourceName: "project/contracts/AaveAdapter.sol";
-  readonly buildInfoId: "solc-0_8_27-cd0ad5e2f0b1dc6e04cbe6845235e9c40720415c";
+  readonly buildInfoId: "solc-0_8_27-ef545fc7013a0eb534b0e5f13fc409a58b528238";
 };
 
 import "hardhat/types/artifacts";

@@ -15,7 +15,7 @@ export interface CompoundAdapter$Type {
   readonly deployedLinkReferences: {};
   readonly immutableReferences: {};
   readonly inputSourceName: "project/contracts/CompoundAdapter.sol";
-  readonly buildInfoId: "solc-0_8_27-cd0ad5e2f0b1dc6e04cbe6845235e9c40720415c";
+  readonly buildInfoId: "solc-0_8_27-36aa4295bde86aeb75c35d2548f96965bcfcd7e3";
 };
 
 import "hardhat/types/artifacts";
