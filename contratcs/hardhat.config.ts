@@ -23,7 +23,7 @@ export default defineConfig({
         // Sepolia Testnet
         sepolia: {
             type: "http",
-            url: process.env.SEPOLIA_URL || "",
+            url: process.env.SEPOLIA_URL || "https://rpc.sepolia.org",
             accounts: process.env.PRIVATE_KEY_TESNET ? [process.env.PRIVATE_KEY_TESNET] : [],
         },
     },

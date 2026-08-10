@@ -8,10 +8,22 @@ node_modules/
 !.yarn/releases
 !.yarn/versions
 
-# Next.js
+# Hardhat / Smart Contracts
+cache/
+artifacts/
+typechain/
+typechain-types/
+coverage/
+coverage.json
+ignition/deployments/
+
+# Node.js / Backend
+dist/
+build/
+
+# Next.js / Frontend
 .next/
 out/
-build/
 
 # TypeScript
 *.tsbuildinfo
@@ -19,10 +31,9 @@ next-env.d.ts
 
 # Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+!.env.exemaple
 
 # Testing
 coverage/
