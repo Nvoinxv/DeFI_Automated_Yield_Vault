@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    // ===== TARGET & MODULE =====
+    "target": "ES2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    // ===== ENVIRONMENT =====
+    "lib": [
+      "ES2022"
+    ],
+    "types": [
+      "node"
+    ],
+    // ===== OUTPUT (Ini yang paling penting!) =====
+    "outDir": "./dist",
+    "rootDir": "./src",
+    // ===== SOURCE MAPS & DECLARATIONS =====
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    // ===== STRICTNESS (dari tsconfig lo, semua bagus!) =====
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    // ===== COMPATIBILITY =====
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
