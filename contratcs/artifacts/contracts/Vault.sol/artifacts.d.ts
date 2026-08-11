@@ -15,7 +15,7 @@ export interface Vault$Type {
   readonly deployedLinkReferences: {};
   readonly immutableReferences: {"1164":[{"length":32,"start":667},{"length":32,"start":2127},{"length":32,"start":3520},{"length":32,"start":3672}],"1166":[{"length":32,"start":1538}]};
   readonly inputSourceName: "project/contracts/Vault.sol";
-  readonly buildInfoId: "solc-0_8_27-ab9a60c53e15134d807a4c3a634bf54b471b9140";
+  readonly buildInfoId: "solc-0_8_27-09966e5bb83e03359324a5fc5d365eddb87dd9f5";
 };
 
 import "hardhat/types/artifacts";
