@@ -19,8 +19,10 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@nestjs/config": "^4.0.4",
     "@prisma/client": "^6.5.0",
     "bullmq": "^5.41.8",
+    "joi": "^18.2.3",
     "viem": "^2.23.2"
   }
 }
