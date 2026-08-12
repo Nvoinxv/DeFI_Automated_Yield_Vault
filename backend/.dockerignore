@@ -1,0 +1,78 @@
+# =============================================================================
+# 🚫 .dockerignore — File yang TIDAK boleh masuk ke Docker image
+# =============================================================================
+# Ini PENTING banget buat keamanan & ukuran image.
+# Kalau file sensitif kebawa ke image, orang bisa extract walau .env di .gitignore
+# =============================================================================
+
+# === NODE MODULES & BUILD OUTPUT ===
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+.pnpm-store
+
+# === BUILD OUTPUT (sudah dibikin ulang di container) ===
+dist
+build
+coverage
+.nyc_output
+
+# === ENVIRONMENT FILES — JANGAN PERNAH MASUK IMAGE! ===
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
+
+# === DOCKER FILES ITU SENDIRI ===
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+.dockerignore
+
+# === GIT ===
+.git
+.gitignore
+.gitattributes
+.github
+
+# === IDE & OS ===
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === LOGS ===
+*.log
+logs/
+
+# === TEST FILES (nggak perlu di production image) ===
+test/
+*.spec.ts
+*.test.ts
+e2e/
+
+# === DOKUMENTASI (nggak perlu di image) ===
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+
+# === PRISMA: migrations bisa di-skip kalau pakai prisma migrate deploy
+# Tapi schema.prisma WAJIB ada (udah di-copy manual di Dockerfile)
+# Kalau mau bawa migrations juga, hapus baris ini:
+# prisma/migrations
+
+# === LAINNYA ===
+*.md
+.editorconfig
+.eslintrc*
+.prettierrc*
+tsconfig*.json
+jest.config.js
+nest-cli.json
