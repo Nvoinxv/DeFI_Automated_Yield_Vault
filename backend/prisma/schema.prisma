@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// === EVENT ON-CHAIN (Reorg-Safe Design) ===
+model OnChainEvent {
+  id          String   @id @default(uuid())
+  
+  // Identitas unik event (idempotency key)
+  blockNumber BigInt
+  blockHash   String
+  logIndex    Int
+  txHash      String
+  
+  // Data event
+  eventType   String   // "Deposit" | "Withdraw" | "Rebalance"
+  sender      String   // address user
+  amount      String?  // BigInt sebagai String (biar aman dari overflow)
+  shares      String?
+  data        Json?    // data tambahan (flexible)
+  
+  // Reorg safety
+  isFinalized Boolean  @default(false)  // true kalau block sudah "cukup tua"
+  isReorged   Boolean  @default(false)  // true kalau block ini di-reorg
+  chainId     Int
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Index biar query cepat
+  @@index([blockNumber])
+  @@index([txHash])
+  @@index([eventType, isFinalized])
+  @@index([isReorged])
+  
+  // Kombinasi unik: 1 event di 1 block, 1 logIndex = 1 baris
+  @@unique([blockHash, logIndex, chainId])
+}
+
+// === TVL HISTORIS ===
+model TvlSnapshot {
+  id          String   @id @default(uuid())
+  timestamp   DateTime @default(now())
+  totalAssets String   // total asset di vault (BigInt string)
+  totalShares String   // total supply shares
+  protocol    String   // "Aave" | "Compound" | "Vault"
+  chainId     Int
+  blockNumber BigInt
+  
+  @@index([timestamp])
+  @@index([protocol, timestamp])
+}
+
+// === APY HISTORIS ===
+model ApySnapshot {
+  id          String   @id @default(uuid())
+  timestamp   DateTime @default(now())
+  protocol    String   // "Aave" | "Compound"
+  apy         Decimal  @db.Decimal(18, 16) // 0.0523 = 5.23%
+  rawData     Json?    // data perhitungan lengkap
+  chainId     Int
+  blockNumber BigInt
+  
+  @@index([protocol, timestamp])
+}
+
+// === REBALANCE LOG ===
+model RebalanceLog {
+  id              String   @id @default(uuid())
+  timestamp       DateTime @default(now())
+  txHash          String?
+  status          String   // "pending" | "success" | "failed"
+  fromProtocol    String
+  toProtocol      String
+  amount          String
+  gasPrice        String?
+  gasUsed         String?
+  errorMessage    String?
+  retryCount      Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([status])
+  @@index([createdAt])
+}
+
+// === USER POSITION (cache, bukan source of truth) ===
+model UserPosition {
+  id          String   @id @default(uuid())
+  address     String   // wallet address
+  shares      String   @default("0")
+  deposited   String   @default("0") // total pernah deposit
+  withdrawn   String   @default("0") // total pernah withdraw
+  lastUpdate  DateTime @updatedAt
+  chainId     Int
+  
+  @@unique([address, chainId])
+  @@index([address])
+}
