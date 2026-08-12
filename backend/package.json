@@ -14,15 +14,17 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^22.13.14",
+    "@types/node": "^22.20.1",
     "tsx": "^4.23.12",
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@nestjs/bullmq": "^11.0.5",
     "@nestjs/config": "^4.0.4",
     "@prisma/client": "^6.5.0",
-    "bullmq": "^5.41.8",
+    "bullmq": "^5.81.3",
+    "ioredis": "^6.0.0",
     "joi": "^18.2.3",
-    "viem": "^2.23.2"
+    "viem": "^2.55.13"
   }
 }
