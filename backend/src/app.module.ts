@@ -2,8 +2,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
-import { PrismaModule } from './prisma/prisma.module';
-import { HealthModule } from './health/health.module';
+import { PrismaModule } from './prisma/prisma.module.js';
+import { HealthModule } from './health/health.module.js';
 
 @Module({
     imports: [
@@ -16,7 +16,7 @@ import { HealthModule } from './health/health.module';
         // 2. Redis/BullMQ connection
         BullModule.forRoot({
             connection: {
-                url: process.env.REDIS_URL,
+                url: process.env.REDIS_URL || 'redis://localhost:6379',
             },
         }),
 
