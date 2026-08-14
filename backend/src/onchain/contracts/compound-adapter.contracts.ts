@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { publicClient } from '../../config/viem.config';
-import { IStrategyAdapter } from './strategy.interface';
+import { publicClient } from '../../config/viem.config.js';
+import { type IStrategyAdapter } from './strategy.interface.js';
 
 // ── ABI: CompoundAdapter.sol (sesuai kontrak lo) ──
 const COMPOUND_ADAPTER_ABI = [
@@ -29,6 +29,13 @@ const COMPOUND_ADAPTER_ABI = [
         inputs: [],
         name: 'vault',
         outputs: [{ internalType: 'address', name: '', type: 'address' }],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'isActive',
+        outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
         stateMutability: 'view',
         type: 'function',
     },
@@ -76,6 +83,14 @@ const RATE_SCALE = 1e18; // Compound v3: getSupplyRate scaled by 1e18
 
 @Injectable()
 export class CompoundAdapterContract implements IStrategyAdapter {
+    async isActive(): Promise<boolean> {
+        return publicClient.readContract({
+            address: this.adapterAddress,
+            abi: COMPOUND_ADAPTER_ABI,
+            functionName: 'isActive',
+        });
+    }
+
     private readonly adapterAddress: `0x${string}`;
     private cometAddress: `0x${string}` | null = null;
     private underlyingAddress: `0x${string}` | null = null;

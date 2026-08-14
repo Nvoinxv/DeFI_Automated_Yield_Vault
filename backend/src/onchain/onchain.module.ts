@@ -1,21 +1,21 @@
 import { Module } from '@nestjs/common';
-import { OnchainService } from './onchain.service';
-import { AaveAdapterContract } from './contracts/aave-adapter.contracts';
-import { CompoundAdapterContract } from './contracts/compound-adapter.contracts';
-import { VaultContract } from './contracts/vault.contracts';
+// import { OnchainService } from './onchain.service.js';
+import { AaveAdapterContract } from './contracts/aave-adapter.contracts.js';
+import { CompoundAdapterContract } from './contracts/compound-adapter.contracts.js';
+// import { VaultContract } from './contracts/vault.contracts.js';
 
 @Module({
     providers: [
-        OnchainService,
+        // OnchainService,
         AaveAdapterContract,
         CompoundAdapterContract,
-        VaultContract,
+        // VaultContract,
     ],
     exports: [
-        OnchainService,
+        // OnchainService,
         AaveAdapterContract,
         CompoundAdapterContract,
-        VaultContract,
+        // VaultContract,
     ],
 })
 export class OnchainModule { }
