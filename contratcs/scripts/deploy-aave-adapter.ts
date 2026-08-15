@@ -7,7 +7,25 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
+// ── Load .env secara eksplisit dari root project ──────────────────────────────
+// Script ini ada di: contratcs/scripts/ → naik 3 level = root project
+// Prioritas: contratcs/.env (local) → root .env (project root)
+const contractsEnvPath = path.resolve(__dirname, "../../.env");
+const rootEnvPath = path.resolve(__dirname, "../../../.env");
+
+if (fs.existsSync(contractsEnvPath)) {
+    dotenv.config({ path: contractsEnvPath, override: false });
+}
+if (fs.existsSync(rootEnvPath)) {
+    dotenv.config({ path: rootEnvPath, override: false });
+}
+
+if (!fs.existsSync(contractsEnvPath) && !fs.existsSync(rootEnvPath)) {
+    console.warn(
+        "⚠️  Tidak ditemukan file .env di contratcs/ maupun root project.\n" +
+        "   Pastikan file .env sudah dibuat sebelum menjalankan skrip ini."
+    );
+}
 
 // ═══════════════════════════════════════════════════════════════
 // ABI Minimal (Type-safe, as const untuk ethers v6)
@@ -35,10 +53,16 @@ interface DeployEnv {
 
 function validateEnv(): DeployEnv {
     // 1. Ambil nilai variabel dari .env
-    const vaultAddress = process.env.VAULT_ADDRESS || "0x327230f903dc1d9033edcd24e28ba8a7ee946e6c";
-    const underlyingToken = process.env.UNDERLYING_TOKEN || "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8"; // Aave USDC Sepolia
-    const poolAddressesProvider = process.env.POOL_ADDRESSES_PROVIDER || "0x012bac54348c08634aa1336edc8c0f8d9d150fce"; // Aave Pool Provider Sepolia
-    const sepoliaRpc = process.env.SEPOLIA_RPC || process.env.SEPOLIA_URL || "https://rpc.sepolia.org";
+    const vaultAddress = process.env.VAULT_ADDRESS;
+    // Support dua nama variabel: UNDERLYING_TOKEN (baru) atau AAVE_UNDERLYING_TOKEN (root .env)
+    const underlyingToken =
+        process.env.UNDERLYING_TOKEN ||
+        process.env.AAVE_UNDERLYING_TOKEN;
+    const poolAddressesProvider = process.env.POOL_ADDRESSES_PROVIDER;
+    const sepoliaRpc =
+        process.env.SEPOLIA_RPC ||
+        process.env.SEPOLIA_URL ||
+        "https://rpc.sepolia.org";
 
     // 2. Gabungkan Private Key dari 2 segmen (Bitget Wallet) atau 1 variabel tunggal
     const segmen1 = process.env.PRIVATE_KEY_TESNET_SEGMEN_PERTAMA || "";
@@ -68,6 +92,22 @@ function validateEnv(): DeployEnv {
         throw new Error(
             "❌ Error: VAULT_ADDRESS belum diisi atau bernilai 0x0 di .env!\n" +
             "Silakan isi alamat Vault kamu yang asli di file .env sebelum menjalankan skrip ini."
+        );
+    }
+
+    if (!underlyingToken) {
+        throw new Error(
+            "❌ Error: Underlying token tidak ditemukan!\n" +
+            "Isi salah satu di file .env:\n" +
+            "  UNDERLYING_TOKEN=0x...  (atau)\n" +
+            "  AAVE_UNDERLYING_TOKEN=0x..."
+        );
+    }
+
+    if (!poolAddressesProvider) {
+        throw new Error(
+            "❌ Error: POOL_ADDRESSES_PROVIDER tidak ditemukan di .env!\n" +
+            "Contoh untuk Sepolia: POOL_ADDRESSES_PROVIDER=0x012bAC54348C08634AA1336EdC8C0f8d9D150Fce"
         );
     }
 
