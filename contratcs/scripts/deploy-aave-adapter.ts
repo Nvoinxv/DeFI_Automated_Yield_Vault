@@ -1,4 +1,4 @@
-import { ethers, Contract, ContractFactory, Signer, Wallet } from "ethers";
+import { ethers } from "ethers";
 import * as dotenv from "dotenv";
 import fs from "fs";
 import path from "path";
@@ -34,30 +34,45 @@ interface DeployEnv {
 }
 
 function validateEnv(): DeployEnv {
-    const required: (keyof DeployEnv)[] = [
-        "VAULT_ADDRESS",
-        "UNDERLYING_TOKEN",
-        "POOL_ADDRESSES_PROVIDER",
-    ];
-
-    // Fallbacks for Sepolia
-    const sepoliaRpc = process.env.SEPOLIA_RPC || process.env.SEPOLIA_URL || "https://rpc.sepolia.org";
-    const vaultAddress = process.env.VAULT_ADDRESS || "0x0000000000000000000000000000000000000000"; // Dummy
+    // 1. Ambil nilai variabel dari .env
+    const vaultAddress = process.env.VAULT_ADDRESS;
     const underlyingToken = process.env.UNDERLYING_TOKEN || "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8"; // Aave USDC Sepolia
-    const poolAddressesProvider = process.env.POOL_ADDRESSES_PROVIDER || "0x012bac54348c08634aa1336edc8c0f8d9d150fce"; // Aave Pool Addresses Provider Sepolia
+    const poolAddressesProvider = process.env.POOL_ADDRESSES_PROVIDER || "0x012bac54348c08634aa1336edc8c0f8d9d150fce"; // Aave Pool Provider Sepolia
+    const sepoliaRpc = process.env.SEPOLIA_RPC || process.env.SEPOLIA_URL || "https://rpc.sepolia.org";
 
-    // Handle segmented private key like hardhat config
-    const privateKey = process.env.PRIVATE_KEY_TESNET || 
-        (process.env.PRIVATE_KEY_TESNET_SEGMEN_PERTAMA && process.env.PRIVATE_KEY_TESNET_SEGMEN_KEDUA ? 
-        `${process.env.PRIVATE_KEY_TESNET_SEGMEN_PERTAMA}${process.env.PRIVATE_KEY_TESNET_SEGMEN_KEDUA}` : "");
-    const pkToUse = process.env.PRIVATE_KEY || privateKey;
+    // 2. Gabungkan Private Key dari 2 segmen (Bitget Wallet) atau 1 variabel tunggal
+    const segmen1 = process.env.PRIVATE_KEY_TESNET_SEGMEN_PERTAMA || "";
+    const segmen2 = process.env.PRIVATE_KEY_TESNET_SEGMEN_KEDUA || "";
 
-    if (!pkToUse) {
-        throw new Error("❌ PRIVATE_KEY missing! Pastikan file .env sudah lengkap di folder contract.");
+    let privateKey = process.env.PRIVATE_KEY || process.env.PRIVATE_KEY_TESTNET || "";
+
+    // Jika private key belum ada di variabel tunggal, gabungkan segmen 1 & 2
+    if (!privateKey && segmen1 && segmen2) {
+        privateKey = `${segmen1.trim()}${segmen2.trim()}`;
+    }
+
+    // Pastikan format prefix "0x" valid jika belum ada
+    if (privateKey && !privateKey.startsWith("0x")) {
+        privateKey = `0x${privateKey}`;
+    }
+
+    // 3. VALIDASI STRICT (Fail-Fast)
+    if (!privateKey) {
+        throw new Error(
+            "❌ Error: Private key tidak ditemukan!\n" +
+            "Pastikan kamu sudah mengisi `PRIVATE_KEY_TESNET_SEGMEN_PERTAMA` dan `PRIVATE_KEY_TESNET_SEGMEN_KEDUA` di file .env!"
+        );
+    }
+
+    if (!vaultAddress || vaultAddress === "0x0000000000000000000000000000000000000000") {
+        throw new Error(
+            "❌ Error: VAULT_ADDRESS belum diisi atau bernilai 0x0 di .env!\n" +
+            "Silakan isi alamat Vault kamu yang asli di file .env sebelum menjalankan skrip ini."
+        );
     }
 
     return {
-        PRIVATE_KEY: pkToUse,
+        PRIVATE_KEY: privateKey,
         SEPOLIA_RPC: sepoliaRpc,
         VAULT_ADDRESS: vaultAddress,
         UNDERLYING_TOKEN: underlyingToken,
@@ -70,7 +85,7 @@ function validateEnv(): DeployEnv {
 // ═══════════════════════════════════════════════════════════════
 
 async function main(): Promise<void> {
-    // 1. Ambil env
+    // 1. Ambil & Validasi env
     const env = validateEnv();
 
     // 2. Setup Provider & Deployer
@@ -93,9 +108,9 @@ async function main(): Promise<void> {
 
     // 4. Ambil Aave Pool & aToken dari blockchain (REAL on-chain data)
     console.log("\n📡 Memvalidasi konfigurasi Aave...");
-    
-    let poolAddress = "0x0000000000000000000000000000000000000000";
-    let aTokenAddress = "0x0000000000000000000000000000000000000000";
+
+    let poolAddress: string;
+    let aTokenAddress: string;
 
     try {
         const addressesProvider = new ethers.Contract(
@@ -110,10 +125,9 @@ async function main(): Promise<void> {
         const pool = new ethers.Contract(poolAddress, POOL_ABI, deployer);
         const reserveData = await pool.getReserveData(env.UNDERLYING_TOKEN) as any;
         aTokenAddress = reserveData[8];
-    } catch (e) {
-        console.warn("⚠️ Gagal memvalidasi Aave Pool di RPC, menggunakan dummy/env data karena mungkin address belum di-set di .env");
-        poolAddress = env.POOL_ADDRESSES_PROVIDER; // Fallback untuk testing
-        aTokenAddress = "0x0000000000000000000000000000000000000001"; // Dummy aToken
+        console.log("🪙 aToken Address:", aTokenAddress);
+    } catch (e: any) {
+        throw new Error(`❌ Gagal mengambil data Aave Pool/aToken dari RPC: ${e.message}`);
     }
 
     // 5. Deploy AaveAdapter.sol
@@ -143,7 +157,6 @@ async function main(): Promise<void> {
     console.log("🔍 Verifikasi deploy...");
 
     try {
-        // Panggil totalAssets via pure contract
         const adapterContract = new ethers.Contract(adapterAddress, artifact.abi, deployer);
         const totalAssets: bigint = await adapterContract.totalAssets();
         console.log("✅ totalAssets():", totalAssets.toString(), "(OK, contract hidup)");
