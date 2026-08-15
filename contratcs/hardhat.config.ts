@@ -1,15 +1,18 @@
 import { defineConfig } from "hardhat/config";
 import toolboxPlugin from "@nomicfoundation/hardhat-toolbox-viem";
+import ethersPlugin from "@nomicfoundation/hardhat-ethers";
 import * as dotenv from "dotenv";
 
-dotenv.config(); // ← Biar bisa baca file .env
+dotenv.config();
 
 const privateKey = process.env.PRIVATE_KEY_TESNET || 
     (process.env.PRIVATE_KEY_TESNET_SEGMEN_PERTAMA && process.env.PRIVATE_KEY_TESNET_SEGMEN_KEDUA ? 
     `${process.env.PRIVATE_KEY_TESNET_SEGMEN_PERTAMA}${process.env.PRIVATE_KEY_TESNET_SEGMEN_KEDUA}` : "");
 
+const pkToUse = process.env.PRIVATE_KEY || privateKey;
+
 export default defineConfig({
-    plugins: [toolboxPlugin],
+    plugins: [toolboxPlugin, ethersPlugin],
     solidity: {
         version: "0.8.27",
         settings: {
@@ -25,15 +28,13 @@ export default defineConfig({
             type: "edr-simulated",
             chainId: 31337,
         },
-        // Sepolia Testnet
         sepolia: {
             type: "http",
-            url: process.env.SEPOLIA_URL || "https://rpc.sepolia.org",
-            accounts: privateKey ? [privateKey] : [],
+            url: process.env.SEPOLIA_URL || process.env.SEPOLIA_RPC || "https://rpc.sepolia.org",
+            accounts: pkToUse ? [pkToUse] : [],
         },
     },
 
-    // Etherscan buat verify contract (opsional tapi recommended)
     etherscan: {
         apiKey: process.env.ETHERSCAN_API_KEY || "",
     },
