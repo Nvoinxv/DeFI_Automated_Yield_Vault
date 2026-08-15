@@ -1,11 +1,5 @@
 import { ethers } from "hardhat";
 import * as dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -25,11 +19,11 @@ async function main() {
     console.log("💰 Balance:", ethers.formatEther(balance), "ETH\n");
 
     if (balance === 0n) {
-        throw new Error("❌ ETH Sepolia kamu 0! Ambil faucet dulu.");
+        throw new Error("❌ ETH Sepolia kamu 0! Ambil faucet terlebih dahulu.");
     }
 
     // Parameter Konfigurasi Sepolia
-    const UNDERLYING_TOKEN = process.env.UNDERLYING_TOKEN || "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8"; // USDC Sepolia
+    const UNDERLYING_TOKEN = process.env.UNDERLYING_TOKEN || "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8";
     const POOL_ADDRESSES_PROVIDER = process.env.POOL_ADDRESSES_PROVIDER || "0x012bac54348c08634aa1336edc8c0f8d9d150fce";
 
     // -------------------------------------------------------------
@@ -52,7 +46,7 @@ async function main() {
     console.log("\n📡 [2/3] Fetching Aave Pool & Deploying AaveAdapter.sol...");
 
     let poolAddress = POOL_ADDRESSES_PROVIDER;
-    let aTokenAddress = "0x16dA4541aD1807f4443d92D26044C1147406EB80"; // USDC aToken Sepolia Fallback
+    let aTokenAddress = "0x16dA4541aD1807f4443d92D26044C1147406EB80";
 
     try {
         const addressesProvider = new ethers.Contract(POOL_ADDRESSES_PROVIDER, POOL_ADDRESSES_PROVIDER_ABI, deployer);
@@ -65,12 +59,9 @@ async function main() {
         console.warn("⚠️ Gagal fetch Aave Pool via RPC, menggunakan fallback address.");
     }
 
-    const artifactPath = path.resolve(__dirname, "../artifacts/contracts/AaveAdapter.sol/AaveAdapter.json");
-    const artifact = JSON.parse(fs.readFileSync(artifactPath, "utf8"));
-    const AaveAdapterFactory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, deployer);
-
+    const AaveAdapterFactory = await ethers.getContractFactory("AaveAdapter");
     const adapter = await AaveAdapterFactory.deploy(
-        vaultAddress,       // ALAMAT VAULT YANG BARU DIDEPLOY
+        vaultAddress,
         UNDERLYING_TOKEN,
         aTokenAddress,
         poolAddress
@@ -80,16 +71,13 @@ async function main() {
     console.log("✅ AaveAdapter deployed to:", adapterAddress);
 
     // -------------------------------------------------------------
-    // 3. DAFTARKAN ADAPTER KE VAULT VIA addAdapter()
+    // 3. DAFTARKAN ADAPTER KE VAULT
     // -------------------------------------------------------------
     console.log("\n🔗 [3/3] Linking AaveAdapter to Vault...");
     const addTx = await vault.addAdapter(adapterAddress);
     await addTx.wait();
     console.log("✅ Adapter registered into Vault!");
 
-    // -------------------------------------------------------------
-    // REKAP ALAMAT UNTUK BACKEND DAY 2
-    // -------------------------------------------------------------
     console.log("\n" + "═".repeat(60));
     console.log("🎉 SEMUA CONTRACT BERHASIL DI-DEPLOY & TERHUBUNG!");
     console.log("═".repeat(60));
