@@ -35,7 +35,7 @@ interface DeployEnv {
 
 function validateEnv(): DeployEnv {
     // 1. Ambil nilai variabel dari .env
-    const vaultAddress = process.env.VAULT_ADDRESS;
+    const vaultAddress = process.env.VAULT_ADDRESS || "0x327230f903dc1d9033edcd24e28ba8a7ee946e6c";
     const underlyingToken = process.env.UNDERLYING_TOKEN || "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8"; // Aave USDC Sepolia
     const poolAddressesProvider = process.env.POOL_ADDRESSES_PROVIDER || "0x012bac54348c08634aa1336edc8c0f8d9d150fce"; // Aave Pool Provider Sepolia
     const sepoliaRpc = process.env.SEPOLIA_RPC || process.env.SEPOLIA_URL || "https://rpc.sepolia.org";
