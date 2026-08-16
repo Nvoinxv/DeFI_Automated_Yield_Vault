@@ -1,4 +1,5 @@
-import { ethers } from "hardhat";
+import { ethers } from "ethers";
+import hre from "hardhat";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -12,10 +13,27 @@ const POOL_ABI = [
 ] as const;
 
 async function main() {
-    const [deployer] = await ethers.getSigners();
+    // 1. Ambil network config Sepolia dari hardhat.config.ts
+    const networkConfig = hre.config.networks.sepolia;
+    const rpcUrl = process.env.SEPOLIA_RPC || ("url" in networkConfig ? networkConfig.url : "");
+
+    if (!rpcUrl) {
+        throw new Error("❌ RPC URL untuk Sepolia tidak ditemukan di .env atau hardhat.config.ts!");
+    }
+
+    // 2. Buat Provider & Wallet manual pakai ethers v6 asli
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+
+    // Ambil private key (accounts) dari hardhat config
+    const accounts = "accounts" in networkConfig ? (networkConfig.accounts as string[]) : [];
+    if (!accounts || accounts.length === 0) {
+        throw new Error("❌ Private Key tidak ditemukan di konfigurasi network sepolia!");
+    }
+
+    const deployer = new ethers.Wallet(accounts[0], provider);
     console.log("🔑 Deployer Address:", deployer.address);
 
-    const balance = await ethers.provider.getBalance(deployer.address);
+    const balance = await provider.getBalance(deployer.address);
     console.log("💰 Balance:", ethers.formatEther(balance), "ETH\n");
 
     if (balance === 0n) {
@@ -26,11 +44,17 @@ async function main() {
     const UNDERLYING_TOKEN = process.env.UNDERLYING_TOKEN || "0x94a9d9ac8a22534e3faca9f4e7f2e2cf85d5e4c8";
     const POOL_ADDRESSES_PROVIDER = process.env.POOL_ADDRESSES_PROVIDER || "0x012bac54348c08634aa1336edc8c0f8d9d150fce";
 
+    // Build artifact helper function
+    const getContractFactory = async (contractName: string) => {
+        const artifact = await hre.artifacts.readArtifact(contractName);
+        return new ethers.ContractFactory(artifact.abi, artifact.bytecode, deployer);
+    };
+
     // -------------------------------------------------------------
     // 1. DEPLOY VAULT.SOL
     // -------------------------------------------------------------
     console.log("🚀 [1/3] Deploying Vault.sol...");
-    const VaultFactory = await ethers.getContractFactory("Vault");
+    const VaultFactory = await getContractFactory("Vault");
     const vault = await VaultFactory.deploy(
         UNDERLYING_TOKEN,
         "Automated Yield Vault USDC",
@@ -59,7 +83,7 @@ async function main() {
         console.warn("⚠️ Gagal fetch Aave Pool via RPC, menggunakan fallback address.");
     }
 
-    const AaveAdapterFactory = await ethers.getContractFactory("AaveAdapter");
+    const AaveAdapterFactory = await getContractFactory("AaveAdapter");
     const adapter = await AaveAdapterFactory.deploy(
         vaultAddress,
         UNDERLYING_TOKEN,
@@ -74,7 +98,7 @@ async function main() {
     // 3. DAFTARKAN ADAPTER KE VAULT
     // -------------------------------------------------------------
     console.log("\n🔗 [3/3] Linking AaveAdapter to Vault...");
-    const addTx = await vault.addAdapter(adapterAddress);
+    const addTx = await (vault as any).addAdapter(adapterAddress);
     await addTx.wait();
     console.log("✅ Adapter registered into Vault!");
 

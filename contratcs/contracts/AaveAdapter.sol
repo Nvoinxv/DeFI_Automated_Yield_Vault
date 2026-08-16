@@ -77,7 +77,11 @@ contract AaveAdapter is IStrategyAdapter, Ownable, Pausable {
         // Withdraw all from Aave
         uint256 total = IERC20(aToken).balanceOf(address(this));
         if (total > 0) {
-            aavePool.withdraw(underlyingToken, type(uint256).max, address(this));
+            aavePool.withdraw(
+                underlyingToken,
+                type(uint256).max,
+                address(this)
+            );
         }
 
         // Send all underlying tokens to Vault
